@@ -122,3 +122,117 @@
     </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bethel Core | ClickUp Style Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fb; color: #2f3437; font-family: 'Roboto', sans-serif; overflow-x: hidden; }
+        .sidebar { background-color: #2a2e34; width: 260px; transition: all 0.3s; }
+        .main-content { flex: 1; min-height: 100vh; }
+        .task-card { background: white; border: 1px solid #e9ebf0; transition: all 0.2s; }
+        .task-card:hover { border-color: #7b68ee; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .btn-primary { background-color: #7b68ee; color: white; transition: background 0.2s; }
+        .btn-primary:hover { background-color: #6a56d6; }
+        .status-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; }
+    </style>
+</head>
+<body class="flex">
+
+    <aside class="sidebar h-screen sticky top-0 hidden md:flex flex-col text-gray-300 p-4">
+        <div class="mb-8 flex items-center gap-2 px-2">
+            <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center font-bold text-white">B</div>
+            <span class="font-bold text-white tracking-tight">Bethel Core</span>
+        </div>
+        <nav class="space-y-2">
+            <div class="p-2 hover:bg-gray-700 rounded cursor-pointer text-white font-medium text-sm">🏠 Home</div>
+            <div class="p-2 hover:bg-gray-700 rounded cursor-pointer text-sm">📅 Everything</div>
+            <div class="mt-6 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favorites</div>
+            <div class="p-2 hover:bg-gray-700 rounded cursor-pointer text-sm">⭐ Task Board</div>
+        </nav>
+    </aside>
+
+    <main class="main-content p-4 md:p-8">
+        <header class="mb-8 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Task Management</h1>
+            <button onclick="document.getElementById('taskForm').scrollIntoView({behavior: 'smooth'})" class="btn-primary px-4 py-2 rounded text-sm font-bold">+ NEW TASK</button>
+        </header>
+
+        <section id="taskForm" class="bg-white border border-gray-200 rounded-lg p-6 mb-10 shadow-sm">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <input type="text" id="taskTitle" placeholder="Task Name" class="col-span-2 border-b border-gray-200 p-2 outline-none focus:border-purple-500 text-lg">
+                <select id="taskPriority" class="border border-gray-200 p-2 rounded text-sm outline-none">
+                    <option value="Normal">Normal</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+                <input type="text" id="taskAssignee" placeholder="Assignee" class="border border-gray-200 p-2 rounded text-sm outline-none">
+            </div>
+            <div class="flex justify-between items-center">
+                <textarea id="taskDesc" placeholder="Add description..." class="w-full border-none outline-none text-sm text-gray-600 h-10"></textarea>
+                <button onclick="saveTask()" class="btn-primary px-6 py-2 rounded font-bold">Save</button>
+            </div>
+        </section>
+
+        <div id="taskList" class="space-y-1">
+            </div>
+    </main>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('clickup_tasks')) || [];
+
+        function renderTasks() {
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+            
+            tasks.forEach((task, index) => {
+                const priorityColor = task.priority === 'Urgent' ? 'bg-red-100 text-red-600' : 
+                                     (task.priority === 'High' ? 'bg-yellow-100 text-yellow-600' : 'bg-blue-100 text-blue-600');
+                
+                list.innerHTML += `
+                    <div class="task-card p-3 flex items-center justify-between group">
+                        <div class="flex items-center gap-4 flex-1">
+                            <input type="checkbox" class="w-4 h-4 cursor-pointer">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium text-gray-800">${task.title}</span>
+                                <span class="text-[11px] text-gray-400">${task.desc || 'No description'}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <span class="text-xs text-gray-400 italic">${task.assignee || 'Me'}</span>
+                            <span class="status-badge ${priorityColor}">${task.priority}</span>
+                            <button onclick="deleteTask(${index})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+            localStorage.setItem('clickup_tasks', JSON.stringify(tasks));
+        }
+
+        function saveTask() {
+            const title = document.getElementById('taskTitle').value;
+            const priority = document.getElementById('taskPriority').value;
+            const assignee = document.getElementById('taskAssignee').value;
+            const desc = document.getElementById('taskDesc').value;
+            if(!title) return;
+            
+            tasks.push({ title, priority, assignee, desc });
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDesc').value = '';
+            renderTasks();
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            renderTasks();
+        }
+
+        renderTasks();
+    </script>
+</body>
+</html>
