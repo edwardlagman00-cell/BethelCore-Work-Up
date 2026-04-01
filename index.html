@@ -3,62 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bethel Core Task Manager</title>
+    <title>Bethel Core | Task Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            min-height: 100vh;
-            color: white;
-            font-family: 'Inter', sans-serif;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-        }
+        body { background: #0b0f1a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; }
+        .input-style { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); padding: 0.75rem; border-radius: 0.5rem; color: white; width: 100%; outline: none; }
+        .input-style:focus { border-color: #3b82f6; }
     </style>
 </head>
-<body class="p-4 md:p-10">
-    <div class="max-w-2xl mx-auto">
-        <header class="mb-10 text-center">
-            <h1 class="text-4xl font-extrabold tracking-tight text-white mb-2">Bethel Core</h1>
-            <p class="text-slate-400">Task Management Dashboard</p>
+<body class="p-6 md:p-12">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-10 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-white">Bethel Core Work-Up</h1>
+                <p class="text-slate-500">Internal Task Management Platform</p>
+            </div>
+            <div class="text-right hidden md:block">
+                <span class="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/30">System Active</span>
+            </div>
         </header>
 
-        <div class="glass p-6 mb-8">
-            <div class="flex gap-3">
-                <input type="text" id="taskInput" placeholder="Add a new task..." 
-                    class="w-full bg-slate-900/50 border border-slate-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white">
-                <button onclick="addTask()" class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-lg font-bold transition-all shadow-lg">Add</button>
+        <div class="glass p-8 mb-10">
+            <h2 class="text-lg font-semibold mb-6 text-blue-400">Create New Task</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-500 mb-2 font-bold">Task Title</label>
+                    <input type="text" id="taskTitle" placeholder="e.g. Website Update" class="input-style">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-500 mb-2 font-bold">Priority</label>
+                    <select id="taskPriority" class="input-style">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High Priority</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-500 mb-2 font-bold">Assignee</label>
+                    <input type="text" id="taskAssignee" placeholder="Name of Staff" class="input-style">
+                </div>
             </div>
+            <div class="mb-6">
+                <label class="block text-xs uppercase tracking-wider text-slate-500 mb-2 font-bold">Description</label>
+                <textarea id="taskDesc" placeholder="Describe the task details..." rows="3" class="input-style"></textarea>
+            </div>
+            <button onclick="saveTask()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg transition-all w-full md:w-auto shadow-lg shadow-blue-900/20">Create Task</button>
         </div>
 
-        <div id="taskList" class="space-y-3">
+        <div class="grid grid-cols-1 gap-4" id="taskList">
             </div>
     </div>
 
     <script>
-        function addTask() {
-            const input = document.getElementById('taskInput');
-            const taskText = input.value.trim();
-            if (taskText === "") return;
+        let tasks = JSON.parse(localStorage.getItem('bethel_v2_tasks')) || [];
 
+        function renderTasks() {
             const list = document.getElementById('taskList');
-            const div = document.createElement('div');
-            div.className = "glass p-4 flex justify-between items-center animate-in fade-in slide-in-from-bottom-2 duration-300";
-            div.innerHTML = `
-                <span class="text-slate-200">${taskText}</span>
-                <button onclick="this.parentElement.remove()" class="text-slate-500 hover:text-red-400 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                </button>
-            `;
-            list.appendChild(div);
-            input.value = "";
+            list.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                list.innerHTML = '<div class="text-center p-10 text-slate-600 italic">No tasks assigned yet.</div>';
+            }
+
+            tasks.forEach((task, index) => {
+                const priorityClass = task.priority === 'High' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                                     (task.priority === 'Medium' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20');
+                
+                list.innerHTML += `
+                    <div class="glass p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-in fade-in duration-500">
+                        <div class="flex-grow">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${priorityClass}">${task.priority}</span>
+                                <h3 class="text-xl font-semibold text-white">${task.title}</h3>
+                            </div>
+                            <p class="text-slate-400 text-sm mb-4">${task.desc}</p>
+                            <div class="flex items-center gap-4 text-xs text-slate-500">
+                                <span><strong class="text-slate-300">Assignee:</strong> ${task.assignee || 'Unassigned'}</span>
+                                <span><strong class="text-slate-300">Status:</strong> Open</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="deleteTask(${index})" class="w-full md:w-auto bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded text-sm transition">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            localStorage.setItem('bethel_v2_tasks', JSON.stringify(tasks));
         }
+
+        function saveTask() {
+            const title = document.getElementById('taskTitle').value;
+            const priority = document.getElementById('taskPriority').value;
+            const assignee = document.getElementById('taskAssignee').value;
+            const desc = document.getElementById('taskDesc').value;
+
+            if(!title) return alert("Please provide a task title.");
+            
+            tasks.push({ title, priority, assignee, desc, status: 'Open' });
+            
+            // Clear inputs
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDesc').value = '';
+            document.getElementById('taskAssignee').value = '';
+            
+            renderTasks();
+        }
+
+        function deleteTask(index) {
+            if(confirm("Sigurado ka bang buburahin mo ito?")) {
+                tasks.splice(index, 1);
+                renderTasks();
+            }
+        }
+
+        renderTasks();
     </script>
 </body>
 </html>
