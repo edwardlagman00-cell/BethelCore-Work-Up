@@ -1,147 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkUp | Bethel Core Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #f4f7fa; font-family: 'Inter', sans-serif; color: #2d3436; }
-        .sidebar { background-color: #2b2d35; width: 260px; min-height: 100vh; color: #a5a9b2; }
-        .sidebar-item:hover { background-color: #383b45; color: white; }
-        .sidebar-active { background-color: #383b45; color: white; border-left: 4px solid #a855f7; }
-        .gradient-header { background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); }
-        .card { background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.03); }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .btn-primary { background: #7b68ee; transition: all 0.2s; }
-        .btn-primary:hover { background: #6a56d6; transform: translateY(-1px); }
-    </style>
-</head>
-<body class="flex">
-
-    <aside class="sidebar fixed h-full flex flex-col p-6">
-        <div class="flex items-center gap-3 mb-10 px-2">
-            <div class="w-9 h-9 gradient-header rounded-xl flex items-center justify-center font-bold text-white italic shadow-lg text-xl">W</div>
-            <span class="font-bold text-white text-2xl tracking-tighter">WorkUp</span>
-        </div>
-        <nav class="space-y-1">
-            <div class="sidebar-item p-3 rounded-xl flex items-center gap-3 cursor-pointer sidebar-active">
-                <span>🏠</span> <span class="text-sm font-semibold">Home</span>
-            </div>
-            <div class="sidebar-item p-3 rounded-xl flex items-center gap-3 cursor-pointer">
-                <span>📥</span> <span class="text-sm font-semibold">Inbox</span>
-            </div>
-            <div class="sidebar-item p-3 rounded-xl flex items-center gap-3 cursor-pointer">
-                <span>📊</span> <span class="text-sm font-semibold">Reports</span>
-            </div>
-        </nav>
-        <div class="mt-auto p-4 border-t border-gray-700 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-[10px] text-white font-bold">JD</div>
-            <span class="text-xs font-bold text-white">Juan Dela Cruz</span>
-        </div>
-    </aside>
-
-    <main class="ml-[260px] flex-1 p-10">
-        <header class="flex justify-between items-center mb-10">
-            <h2 class="text-2xl font-bold">Workspace</h2>
-            <button onclick="toggleModal(true)" class="btn-primary text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-100">+ NEW TASK</button>
-        </header>
-
-        <div class="gradient-header rounded-[32px] p-10 mb-10 text-white shadow-xl relative overflow-hidden">
-            <div class="relative z-10">
-                <h1 class="text-4xl font-black mb-2">Good morning, Boss! 👋</h1>
-                <p class="text-lg opacity-90 mb-8">You have <span id="task-count-text" class="font-bold underline">0 tasks</span> to manage today.</p>
-                <button onclick="toggleModal(true)" class="bg-white text-purple-600 px-6 py-3 rounded-xl font-bold text-sm shadow-md hover:scale-105 transition">+ Add Task Now</button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-4 gap-6 mb-10 text-center">
-            <div class="card p-6">
-                <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Total Tasks</p>
-                <h3 id="stat-total" class="text-3xl font-black">0</h3>
-            </div>
-            <div class="card p-6 border-b-4 border-blue-400">
-                <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">In Progress</p>
-                <h3 class="text-3xl font-black text-blue-500">0</h3>
-            </div>
-        </div>
-
-        <div class="card p-8">
-            <div class="flex justify-between items-center mb-8">
-                <h4 class="text-lg font-bold">Recent Tasks</h4>
-            </div>
-            <div id="taskList" class="space-y-4">
-                <div class="text-center py-10 text-gray-400 italic">No tasks yet. Click "+ New Task" to start.</div>
-            </div>
-        </div>
-    </main>
-
-    <div id="taskModal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center z-50 backdrop-blur-sm">
-        <div class="bg-white rounded-[24px] w-full max-w-md p-10 shadow-2xl">
-            <h2 class="text-2xl font-bold mb-6">Create Task</h2>
-            <input type="text" id="m-title" placeholder="What needs to be done?" class="w-full border p-4 rounded-xl mb-4 outline-none focus:ring-2 focus:ring-purple-400">
-            <select id="m-priority" class="w-full border p-4 rounded-xl mb-6 outline-none">
-                <option value="HIGH">🔴 HIGH Priority</option>
-                <option value="MEDIUM">🟡 MEDIUM Priority</option>
-                <option value="LOW">🔵 LOW Priority</option>
-            </select>
-            <div class="flex justify-end gap-4">
-                <button onclick="toggleModal(false)" class="font-bold text-gray-400">Cancel</button>
-                <button onclick="saveNewTask()" class="btn-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg">Save Task</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let tasks = JSON.parse(localStorage.getItem('bethel_workup_v3')) || [];
-
-        function toggleModal(show) {
-            document.getElementById('taskModal').classList.toggle('hidden', !show);
-        }
-
-        function saveNewTask() {
-            const title = document.getElementById('m-title').value;
-            const priority = document.getElementById('m-priority').value;
-            if (!title) return alert("Task title is required!");
-
-            tasks.push({ id: Date.now(), title, priority });
-            localStorage.setItem('bethel_workup_v3', JSON.stringify(tasks));
-            document.getElementById('m-title').value = '';
-            toggleModal(false);
-            renderTasks();
-        }
-
-        function deleteTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
-            localStorage.setItem('bethel_workup_v3', JSON.stringify(tasks));
-            renderTasks();
-        }
-
-        function renderTasks() {
-            const list = document.getElementById('taskList');
-            document.getElementById('stat-total').innerText = tasks.length;
-            document.getElementById('task-count-text').innerText = `${tasks.length} tasks`;
-
-            if (tasks.length === 0) {
-                list.innerHTML = '<div class="text-center py-10 text-gray-400 italic">No tasks yet.</div>';
-                return;
-            }
-
-            list.innerHTML = tasks.map(t => `
-                <div class="flex items-center justify-between p-5 bg-gray-50 rounded-2xl border border-transparent hover:border-purple-200 transition group">
-                    <div class="flex items-center gap-4">
-                        <span class="status-dot ${t.priority === 'HIGH' ? 'bg-red-500' : (t.priority === 'MEDIUM' ? 'bg-yellow-500' : 'bg-blue-500')}"></span>
-                        <span class="font-semibold text-sm">${t.title}</span>
-                    </div>
-                    <div class="flex items-center gap-6">
-                        <span class="text-[10px] font-bold px-3 py-1 rounded-full border ${t.priority === 'HIGH' ? 'text-red-500 border-red-100 bg-red-50' : 'text-blue-500 border-blue-100 bg-blue-50'}">${t.priority}</span>
-                        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500 text-xs">✕</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        renderTasks();
-    </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskFlow - Project Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
